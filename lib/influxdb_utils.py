@@ -12,14 +12,15 @@ INFLUXDB_URL = os.getenv("INFLUXDB_URL")
 INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
 INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
 INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET")
+INFLUXDB_DATATYPE = os.getenv("INFLUXDB_DATATYPE")
 
 
-def get_last_temperatures(n=10):
+def get_last_temperatures(n=100):
     """Consulta los últimos n valores de temperatura en InfluxDB."""
     query = f'''
         from(bucket: "{INFLUXDB_BUCKET}")
-        |> range(start: -1h)  // Última hora
-        |> filter(fn: (r) => r._measurement == "weather_data" and r._field == "temperature")
+        |> range(start: -7d)  // Última hora
+        |> filter(fn: (r) => r._measurement == "{INFLUXDB_DATATYPE}" and r._field == "temperature")
         |> sort(columns: ["_time"], desc: true)
         |> limit(n: {n})
     '''

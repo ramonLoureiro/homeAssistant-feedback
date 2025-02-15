@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import requests
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -22,9 +23,11 @@ HEADERS = {
 
 def predict_temperature():
     """Predice la temperatura futura basándose en los últimos valores."""
-    temperatures = get_last_temperatures(10)  # Últimos 10 valores
+    temperatures = get_last_temperatures(100)  # Últimos 10 valores
     if len(temperatures) < 2:
         return None  # No hay suficientes datos para predecir
+
+    print(f"Temperaturas: {len(temperatures)}")
 
     X = np.arange(len(temperatures)).reshape(-1, 1)  # Tiempos [0, 1, 2, ...]
     y = np.array(temperatures)  # Temperaturas registradas
@@ -36,7 +39,6 @@ def predict_temperature():
     return round(predicted_temp, 2)
 
 def update_sensor(value):
-    """Actualiza el sensor 'sensor.temperatura_manual' en Home Assistant."""
     url = f"{HOME_ASSISTANT_URL}/api/states/{ENTITY_ID}"
     data = json.dumps({"state": value})
     
@@ -48,8 +50,15 @@ def update_sensor(value):
         print(f"Error al actualizar sensor: {response.text}")
 
 
+start_time = time.time()  # Marca el inicio del script
+
 
 predicted_temp = predict_temperature()
 if predicted_temp:
     update_sensor(round(predicted_temp, 1))  # Actualizar sensor
 
+
+end_time = time.time()  # Marca el final
+elapsed_time = end_time - start_time  # Calcula el tiempo transcurrido
+
+print(f"Tiempo de ejecución: {elapsed_time:.6f} segundos")

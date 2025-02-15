@@ -18,6 +18,8 @@ INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET")
 
 # 🔗 Configuración
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+INFLUXDB_DATATYPE = os.getenv("INFLUXDB_DATATYPE")
+
 CITY = os.getenv("CITY")
 
 
@@ -37,7 +39,7 @@ def write_to_influx(temperature):
     """Escribe el dato en InfluxDB."""
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
         with client.write_api() as write_api:
-            point = Point("weather_data").tag("location", CITY).field("temperature", temperature).time(datetime.utcnow())
+            point = Point(INFLUXDB_DATATYPE).tag("location", CITY).field("temperature", temperature).time(datetime.utcnow())
             write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=point)
             print(f"✅ Escrito en InfluxDB: {temperature}°C")
 
@@ -54,4 +56,4 @@ if temperature is not None:
 
 # 📊 Consultar los últimos 10 valores
 last_temperatures = get_last_temperatures(10)
-print("🌡️ Últimos 10 valores de temperatura:", last_temperatures)
+print("🌡️ Últimos 100 valores de temperatura:", last_temperatures)
