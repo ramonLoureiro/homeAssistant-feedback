@@ -1,9 +1,9 @@
 
 
 import os
-from influxdb_client import InfluxDBClient
-
-from dotenv import load_dotenv
+from datetime import datetime
+from influxdb_client import InfluxDBClient, Point # type: ignore
+from dotenv import load_dotenv # type: ignore
 
 # Cargar variables desde .env
 load_dotenv()
@@ -29,3 +29,11 @@ def get_last_temperatures(n=100):
         tables = query_api.query(query)
         temperatures = [record.get_value() for table in tables for record in table.records]
         return temperatures
+
+def write_to_influx(temperature,location):
+    """Escribe el dato en InfluxDB."""
+    with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
+        with client.write_api() as write_api:
+            point = Point(INFLUXDB_DATATYPE).tag("location", location).field("temperature", temperature).time(datetime.utcnow())
+            write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=point)
+            print(f"Escrito en InfluxDB: {temperature}°C")

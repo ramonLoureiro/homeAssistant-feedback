@@ -1,11 +1,11 @@
 import os
 import json
 import time
-import requests
-import numpy as np
-from sklearn.linear_model import LinearRegression
+import requests # type: ignore
+import numpy as np # type: ignore
+from sklearn.linear_model import LinearRegression # type: ignore
 from lib.influxdb_utils import get_last_temperatures
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 # Cargar variables desde .env
 load_dotenv()

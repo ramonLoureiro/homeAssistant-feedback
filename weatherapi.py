@@ -1,11 +1,8 @@
 import os
-import requests
-from influxdb_client import InfluxDBClient, Point
+import requests # type: ignore
 from datetime import datetime
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from lib.influxdb_utils import get_last_temperatures
-from dotenv import load_dotenv
+from lib.influxdb_utils import get_last_temperatures, write_to_influx
+from dotenv import load_dotenv # type: ignore
 
 # Cargar variables desde .env
 load_dotenv()
@@ -16,7 +13,7 @@ INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
 INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET")
 
 
-# 🔗 Configuración
+# Configuración
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 INFLUXDB_DATATYPE = os.getenv("INFLUXDB_DATATYPE")
 
@@ -32,28 +29,15 @@ def get_weather():
         return data["current"]["temp_c"]
     else:
         print(url);
-        print("❌ Error en API:", response.status_code, response.text)
+        print("Error en API:", response.status_code, response.text)
         return None
 
-def write_to_influx(temperature):
-    """Escribe el dato en InfluxDB."""
-    with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
-        with client.write_api() as write_api:
-            point = Point(INFLUXDB_DATATYPE).tag("location", CITY).field("temperature", temperature).time(datetime.utcnow())
-            write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=point)
-            print(f"✅ Escrito en InfluxDB: {temperature}°C")
 
-
-
-
-
-
-
-# 🔁 Ejecución
+# Ejecución
 temperature = get_weather()
 if temperature is not None:
-    write_to_influx(temperature)
+    write_to_influx(temperature,{CITY})
 
-# 📊 Consultar los últimos 10 valores
-last_temperatures = get_last_temperatures(10)
-print("🌡️ Últimos 100 valores de temperatura:", last_temperatures)
+# Consultar los últimos 10 valores
+last_temperatures = get_last_temperatures(30)
+print("Últimos 30 valores de temperatura:", last_temperatures)
