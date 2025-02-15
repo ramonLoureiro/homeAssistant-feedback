@@ -1,0 +1,50 @@
+
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=iFdB1427!
+      - DOCKER_INFLUXDB_INIT_ORG=home_assistant
+      - DOCKER_INFLUXDB_INIT_BUCKET=ha_data
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=influxdb-j3Q!zK!RyjHWvMt-wvYq0UbRdRVqYAYPiTBDZkUNCYiyyU0D0dFXcdJ
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=gGn1427!
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - influxdb
+
+  python:
+    image: my-python-influxdb:latest
+    container_name: python_influxdb
+    volumes:
+      - ./app:/app  # Aquí mapeas la carpeta de tu código a la del contenedor
+    working_dir: /app
+    command: tail -f /dev/null  # Mantener el contenedor ejecutándose sin hacer nada
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=influxdb-j3Q!zK!RyjHWvMt-wvYq0UbRdRVqYAYPiTBDZkUNCYiyyU0D0dFXcdJ  # Token de autenticación
+      - INFLUXDB_ORG=home_assistant  # Nombre de la organización en InfluxDB
+      - INFLUXDB_BUCKET=ha_data  # Bucket para almacenar los datos
+
+volumes:
+  influxdb_data:
+  grafana_data:
