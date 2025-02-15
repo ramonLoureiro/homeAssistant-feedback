@@ -1,0 +1,11 @@
+NumPy
+NumPy es fundamental para muchas otras librerías en Python. Permite realizar operaciones aritméticas y manejar datos multidimensionales. Es esencial para el análisis de datos y algoritmos complejos.
+
+Pandas
+Pandas es vital en Data Science por su manejo de datos tabulares. Facilita la lectura de archivos y la creación de tablas dinámicas. Hace más fácil explorar conjuntos de datos, mejorando el flujo de trabajo en Python tutorial.
+
+TensorFlow y Keras
+TensorFlow, de Google, y Keras son clave para el aprendizaje profundo. Permiten crear y entrenar redes neuronales fácilmente. Son ideales para reconocimiento de imágenes y procesamiento de lenguaje natural.
+
+Scikit-learn
+Scikit-learn es famoso por el aprendizaje automático en Python. Ofrece algoritmos para clasificación y regresión, y herramientas para Pipelines. Su uso fácil lo hace una referencia en machine learning.

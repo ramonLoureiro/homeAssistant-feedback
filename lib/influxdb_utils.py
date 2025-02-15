@@ -19,7 +19,7 @@ def get_last_temperatures(n=100):
     """Consulta los últimos n valores de temperatura en InfluxDB."""
     query = f'''
         from(bucket: "{INFLUXDB_BUCKET}")
-        |> range(start: -7d)  // Última hora
+        |> range(start: -7d)  
         |> filter(fn: (r) => r._measurement == "{INFLUXDB_DATATYPE}" and r._field == "temperature")
         |> sort(columns: ["_time"], desc: true)
         |> limit(n: {n})

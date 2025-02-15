@@ -12,7 +12,7 @@ load_dotenv()
 
 HOME_ASSISTANT_URL = os.getenv("HOME_ASSISTANT_URL")
 HOME_ASSISTANT_TOKEN = os.getenv("HOME_ASSISTANT_TOKEN")
-ENTITY_ID = "sensor.temperatura_caldera"
+ENTITY_ID = "sensor.temperatura_objetivo_max"
 HEADERS = {
     "Authorization": f"Bearer {HOME_ASSISTANT_TOKEN}",
     "Content-Type": "application/json"
@@ -23,7 +23,7 @@ HEADERS = {
 
 def predict_temperature():
     """Predice la temperatura futura basándose en los últimos valores."""
-    temperatures = get_last_temperatures(100)  # Últimos 10 valores
+    temperatures = get_last_temperatures(100)  # Últimos valores
     if len(temperatures) < 2:
         return None  # No hay suficientes datos para predecir
 

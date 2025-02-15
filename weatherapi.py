@@ -38,6 +38,6 @@ temperature = get_weather()
 if temperature is not None:
     write_to_influx(temperature,{CITY})
 
-# Consultar los últimos 10 valores
+# Consultar los últimos valores
 last_temperatures = get_last_temperatures(30)
-print("Últimos 30 valores de temperatura:", last_temperatures)
+print("Últimos valores de temperatura:", last_temperatures)
