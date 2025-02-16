@@ -32,3 +32,20 @@ from(bucket: "NOAA_CO2_LEVELS")
   |> filter(fn: (r) => r["_field"] == "average")
   |> group()  
   |> count()
+
+##########################################################################
+from(bucket: "NOAA_CO2_LEVELS")
+  |> range(start: 1990-01-01T00:00:00Z, stop: 2035-01-01T00:00:00Z)  // Rango hasta el futuro
+  |> filter(fn: (r) => r["_measurement"] == "co2_levels")
+  |> filter(fn: (r) => r["_field"] == "average")
+  |> sort(columns: ["_time"], desc: false)
+  |> yield(name: "average")
+
+from(bucket: "NOAA_CO2_LEVELS")
+  |> range(start: 1990-01-01T00:00:00Z, stop: 2035-01-01T00:00:00Z)  // Rango hasta el futuro
+  |> filter(fn: (r) => r["_measurement"] == "co2_levels")
+  |> filter(fn: (r) => r["_field"] == "deseasonalized")
+  |> sort(columns: ["_time"], desc: false)
+  |> yield(name: "deseasonalized")
+  
+############################################################################
