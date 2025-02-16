@@ -5,7 +5,6 @@ import io
 import numpy as np # type: ignore
 from sklearn.linear_model import LinearRegression # type: ignore
 from sklearn.preprocessing import PolynomialFeatures  # type: ignore
-from sklearn.preprocessing import FunctionTransformer # type: ignore
 from influxdb_client import InfluxDBClient, Point # type: ignore
 from influxdb_client.client.write_api import SYNCHRONOUS # type: ignore
 from datetime import datetime
