@@ -29,6 +29,55 @@ class ComfortAnalytics:
         self.scaler = StandardScaler()
     
 
+
+class ComfortAnalytics:
+    def __init__(self, url, token, org, bucket):
+        self.client = InfluxDBClient(url=url, token=token, org=org)
+        self.bucket = bucket
+        self.model = None
+        self.scaler = StandardScaler()
+
+    def definir_estado_confort(self, row):
+        """
+        Clasifica el nivel de confort en función de la temperatura y humedad.
+        """
+        if row['temperatura'] < 16:
+            return 0  # Muy frío
+        elif 17 <= row['temperatura'] < 18 and 40 <= row['humedad'] <= 60:
+            return 1  # Frío
+        elif 19 <= row['temperatura'] <= 20 and 40 <= row['humedad'] <= 60:
+            return 2  # Confort
+        elif 23 < row['temperatura'] <= 21 and 40 <= row['humedad'] <= 60:
+            return 3  # Cálido
+        elif row['temperatura'] > 25:
+            return 4  # Muy cálido
+        else:
+            return -1  # Indefinido (por si acaso hay valores fuera de estos rangos)
+
+    def preparar_datos(self, df_temp, df_humedad):
+        """
+        Combina y etiqueta datos con categorías de confort.
+        """
+        # Combinar dataframes por timestamp
+        df_combinado = pd.merge(
+            df_temp[['timestamp', 'temperatura']], 
+            df_humedad[['timestamp', 'humedad']], 
+            on='timestamp', 
+            how='inner'
+        )
+        
+        # Añadir características de tiempo
+        df_combinado['hora_dia'] = df_combinado['timestamp'].dt.hour
+        df_combinado['dia_semana'] = df_combinado['timestamp'].dt.dayofweek
+        
+        # Aplicar la clasificación de confort
+        df_combinado['confort'] = df_combinado.apply(lambda row: self.definir_estado_confort(row), axis=1)
+        
+        return df_combinado
+
+
+
+
     def crear_query(self, param, units,columnas):
         # Generar condiciones de filtro
         condiciones = " or ".join([
@@ -136,7 +185,7 @@ class ComfortAnalytics:
         return result
 
 
-    def preparar_datos(self, df_temp, df_humedad):
+    def sandbox_preparar_datos(self, df_temp, df_humedad):
         """
         Combinar datos de temperatura y humedad
         """
@@ -153,6 +202,7 @@ class ComfortAnalytics:
         df_combinado['dia_semana'] = df_combinado['timestamp'].dt.dayofweek
         
         # Definir confort (20-24°C, 40-60% humedad)
+        
         df_combinado['confort'] = np.where(
             (df_combinado['temperatura'].between(17, 22)) & 
             (df_combinado['humedad'].between(40, 60)),
@@ -191,8 +241,7 @@ class ComfortAnalytics:
         print("Precisión del modelo:")
         print(accuracy_score(y_test, y_pred))
         print("\nInforme de Clasificación:")
-        print(classification_report(y_test, y_pred))
-        
+        print(classification_report(y_test, y_pred, zero_division=1))        
         return self.model
     
     def predecir_confort(self, nuevos_datos):
@@ -212,7 +261,7 @@ class ComfortAnalytics:
         return predicciones, probabilidades
     
 
-    
+ 
     def visualizar_importancia_caracteristicas(self):
         """
         Visualizar importancia de características
