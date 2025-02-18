@@ -1,11 +1,15 @@
+import datetime
 import os
 import pandas as pd # type: ignore
 import numpy as np # type: ignore
 from influxdb_client import InfluxDBClient # type: ignore
 from sklearn.model_selection import train_test_split # type: ignore
 from sklearn.preprocessing import StandardScaler # type: ignore
-from sklearn.ensemble import RandomForestClassifier # type: ignore
-from sklearn.metrics import accuracy_score, classification_report # type: ignore
+
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingRegressor # type: ignore
+from sklearn.neural_network import MLPRegressor # type: ignore
+from sklearn.metrics import accuracy_score, classification_report, mean_absolute_error # type: ignore
+
 import matplotlib.pyplot as plt # type: ignore
 from dotenv import load_dotenv, dotenv_values # type: ignore
 
@@ -255,7 +259,6 @@ class ComfortAnalytics:
         X_train, X_test, y_train_c, y_test_c = train_test_split(X[:-1], y_confort[:-1], test_size=0.2, random_state=42)
         X_train_t, X_test_t, y_train_t, y_test_t = train_test_split(X[:-1], y_temp, test_size=0.2, random_state=42)
         X_train_h, X_test_h, y_train_h, y_test_h = train_test_split(X[:-1], y_humedad, test_size=0.2, random_state=42)
-        
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)
         X_train_scaled_t = self.scaler.fit_transform(X_train_t)
@@ -278,7 +281,45 @@ class ComfortAnalytics:
         y_pred_h = self.model_humedad.predict(X_test_scaled_h)
         print("Error medio absoluto (predicción humedad):", mean_absolute_error(y_test_h, y_pred_h))
 
+        self.evaluar_modelos(X_train_scaled, X_test_scaled, y_train_c, y_test_c) 
+
+
+    # Función para entrenar y evaluar modelos
+    def evaluar_modelos(self,X_train, X_test, y_train, y_test):
+        modelos = {
+            "RandomForest": RandomForestClassifier(n_estimators=100, random_state=42),
+            "GradientBoosting": GradientBoostingRegressor(n_estimators=100, random_state=42),
+            "Red Neuronal": MLPRegressor(hidden_layer_sizes=(50, 50), max_iter=2000, random_state=42)
+        }
+        
+        resultados = {}
+        for nombre, modelo in modelos.items():
+            modelo.fit(X_train, y_train)
+            predicciones = modelo.predict(X_test)
+            error = mean_absolute_error(y_test, predicciones)
+            resultados[nombre] = error
+            print(f"{nombre} - Error Medio Absoluto: {error:.4f}")
+        
+        return resultados
+
+
+
+
+
+
     def recomendar_accion(self, nuevos_datos):
+        print("Recomendaciones:")
+        print(nuevos_datos) ; print()
+
+        dt = datetime.now()
+        print('Datetime is:', dt)
+
+        x = dt.weekday()
+        print('Day of week:', x)
+        h = dt.hour
+
+
+
         """Generar recomendaciones según predicciones"""
         nuevos_datos_scaled = self.scaler.transform(nuevos_datos)
         pred_temp = self.model_temp.predict(nuevos_datos_scaled)
@@ -286,14 +327,16 @@ class ComfortAnalytics:
         
         recomendaciones = []
         for temp, humedad in zip(pred_temp, pred_humedad):
-            if temp < 20:
-                recomendaciones.append("Encender calefacción")
+            if temp < 18:
+                recomendacion = "Encender calefacción"
             elif temp > 24:
-                recomendaciones.append("Bajar persianas o encender ventilador")
+                recomendacion = "Encender aire acondicionado"
             elif humedad > 60:
-                recomendaciones.append("Encender deshumidificador")
+                recomendacion = "Encender deshumidificador"
             else:
-                recomendaciones.append("Condiciones óptimas")
+                recomendacion= "Condiciones óptimas"
+            print(f"Temperatura: {temp:.2f}°C, Humedad: {humedad:.2f}% {recomendacion}")
+            recomendaciones.append(recomendacion) if recomendacion not in recomendaciones else None
         return recomendaciones
 
 
@@ -335,7 +378,7 @@ class ComfortAnalytics:
 
 def main():
     # Configuración de conexión a InfluxDB
-    url=INFLUXDB_URL # Cambia según tu configuración
+    url=INFLUXDB_URL 
     token=INFLUXDB_TOKEN
     org=INFLUXDB_ORG
     bucket=INFLUXDB_BUCKET
@@ -363,18 +406,9 @@ def main():
         df_combinado = analizador.preparar_datos(df_temp, df_humedad)
         
         # Entrenar modelo
-        modelo = analizador.entrenar_modelo(df_combinado)
-        
-        # Visualizar importancia de características
-        analizador.visualizar_importancia_caracteristicas()
-        
-        # Ejemplo de predicción (usa los primeros 5 registros)
-        nuevos_datos = df_combinado[['temperatura', 'humedad', 'hora_dia', 'dia_semana']].iloc[:50]
-        predicciones, probabilidades = analizador.predecir_confort(nuevos_datos)
-        
-        print("\nPredicciones de Confort:")
-        for i, (pred, prob) in enumerate(zip(predicciones, probabilidades)):
-            print(f"Muestra {i+1}: Confort={pred}, Probabilidad={prob.max():.2f}")
+        analizador.entrenar_modelos(df_combinado)
+        nuevos_datos = df_combinado[['temperatura', 'humedad', 'hora_dia', 'dia_semana']].iloc[:100]
+        print(analizador.recomendar_accion(nuevos_datos))        
     
     except Exception as e:
         print(f"Error en el proceso: {e}")

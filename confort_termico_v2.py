@@ -4,8 +4,10 @@ import numpy as np # type: ignore
 from influxdb_client import InfluxDBClient # type: ignore
 from sklearn.model_selection import train_test_split # type: ignore
 from sklearn.preprocessing import StandardScaler # type: ignore
-from sklearn.ensemble import RandomForestClassifier # type: ignore
-from sklearn.metrics import accuracy_score, classification_report # type: ignore
+
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor # type: ignore
+from sklearn.metrics import accuracy_score, classification_report, mean_absolute_error # type: ignore
+
 import matplotlib.pyplot as plt # type: ignore
 from dotenv import load_dotenv, dotenv_values # type: ignore
 
@@ -21,12 +23,6 @@ INFLUXDB_ORG = config.get('INFLUXDB_ORG') or os.getenv('INFLUXDB_ORG')
 INFLUXDB_BUCKET = config.get('INFLUXDB_BUCKET') or os.getenv('INFLUXDB_BUCKET')
 
 
-class ComfortAnalytics:
-    def __init__(self, url, token, org, bucket):
-        self.client = InfluxDBClient(url=url, token=token, org=org)
-        self.bucket = bucket
-        self.model = None
-        self.scaler = StandardScaler()
     
 
 
@@ -363,18 +359,9 @@ def main():
         df_combinado = analizador.preparar_datos(df_temp, df_humedad)
         
         # Entrenar modelo
-        modelo = analizador.entrenar_modelo(df_combinado)
-        
-        # Visualizar importancia de características
-        analizador.visualizar_importancia_caracteristicas()
-        
-        # Ejemplo de predicción (usa los primeros 5 registros)
-        nuevos_datos = df_combinado[['temperatura', 'humedad', 'hora_dia', 'dia_semana']].iloc[:50]
-        predicciones, probabilidades = analizador.predecir_confort(nuevos_datos)
-        
-        print("\nPredicciones de Confort:")
-        for i, (pred, prob) in enumerate(zip(predicciones, probabilidades)):
-            print(f"Muestra {i+1}: Confort={pred}, Probabilidad={prob.max():.2f}")
+        analizador.entrenar_modelos(df_combinado)
+        nuevos_datos = df_combinado[['temperatura', 'humedad', 'hora_dia', 'dia_semana']].head()
+        print(analizador.recomendar_accion(nuevos_datos))        
     
     except Exception as e:
         print(f"Error en el proceso: {e}")
