@@ -3,6 +3,7 @@ import pandas as pd # type: ignore
 import numpy as np # type: ignore
 from dotenv import load_dotenv, dotenv_values # type: ignore
 from lib.load_data import LoadData # type: ignore
+from lib.train_data import EntrenaDatos # type: ignore
 
 # Cargar variables desde .env
 load_dotenv(override=True)
@@ -27,29 +28,41 @@ def main():
     bucket=INFLUXDB_BUCKET
     print(f"Conectando a InfluxDB en {url} {bucket}...")
     
-    sensores = [
+    sensoresHT = [
         'tuya_termometro_wifi',
         'shelly_blu_5480',
         'zigbee_sonoff_snzb02_01',
         'zigbee_heiman_hs3aq'
     ]
 
+    sensoresCO2 = [
+        'zigbee_heiman_hs3aq'
+    ]
+
     # Crear instancia de LoadData
     loader = LoadData(url, token, org, bucket)
     # Obtener datos de temperatura
-    df_temperatura = loader.obtener_datos('temperature', '°C', sensores)
-    df_temperatura_preparados = loader.preparar_datos(df_temperatura, 'temperature',sensores) 
+    df_temperatura = loader.obtener_datos('temperature', '°C', sensoresHT)
+    df_temperatura_preparados = loader.preparar_datos(df_temperatura, 'temperature',sensoresHT) 
 
 
     # Obtener datos de humedad
-    df_humedad = loader.obtener_datos("humidity", "%", sensores)
-    df_humedad_preparados = loader.preparar_datos(df_humedad, 'humidity',sensores) 
+    df_humedad = loader.obtener_datos("humidity", "%", sensoresHT)
+    df_humedad_preparados = loader.preparar_datos(df_humedad, 'humidity',sensoresHT) 
 
-    # Combinar datos
-    df = loader.combinar_datos(df_temperatura_preparados, df_humedad_preparados)
-    print(df.head())
+    df_co2 = loader.obtener_datos("co2", "ppm", sensoresCO2)
+    df_co2_preparados = loader.preparar_datos(df_co2, 'co2',sensoresCO2) 
+
+
+    df = loader.combinar_3_datos (df_temperatura_preparados,df_humedad_preparados,df_co2_preparados)
+
+    print(df)
     ultimo_valor = df.sort_values(by="timestamp", ascending=False).iloc[0]
     print(ultimo_valor)
+
+    print(loader.obtener_confort())
+#    entrenador = EntrenaDatos()
+#    entrenador.entrenar_modelo(df)
 
 
 if __name__ == '__main__':  

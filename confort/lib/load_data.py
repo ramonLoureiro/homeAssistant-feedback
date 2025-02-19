@@ -64,18 +64,85 @@ class LoadData:
         # Añadir características de tiempo
         result['hora_dia'] = result['timestamp'].dt.hour
         result['dia_semana'] = result['timestamp'].dt.dayofweek
+        result['semana'] = result['timestamp'].dt.isocalendar().week
         return result
 
-    def combinar_datos(self, df_temp, df_humedad):
+
+    def obtener_confort(self):
+        query = f'''
+        import "strings"
+        from(bucket: "{self.bucket}")
+        |> range(start: -30d)
+        |> filter(fn: (r) => r["_measurement"] == "confort")
+        |> filter(fn: (r) => r["_field"] == "confort")
+        |> filter(fn: (r) => r["location"] == "casa")
+        |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)            
+        |> pivot(
+            rowKey: ["_time"],
+            columnKey: ["_field"], 
+            valueColumn: "_value"
+        )
+        '''        
+
+
+        try:
+            result = self.client.query_api().query_data_frame(query)
+            
+            if result is not None and not result.empty:
+                # Eliminar columna _result si existe
+                if '_result' in result.columns:
+                    result = result.drop(columns=['_result'])
+                
+                # Renombrar columna de tiempo
+                result = result.rename(columns={'_time': 'timestamp'})               
+                result['timestamp'] = pd.to_datetime(result['timestamp'])
+                return result
+            else:
+                print("No se encontraron datos")
+                return pd.DataFrame()
+        
+        except Exception as e:
+            print(f"Error al obtener datos de temperatura: {e}")
+            return pd.DataFrame()
+
+
+
+    def combinar_3_datos(self, df_temp, df_humedad, df_co2):
         # Combinar DataFrames
-        df_combinado = pd.merge(
+        df_combinado1 = pd.merge(
             df_temp[['timestamp', 'temperature']], 
             df_humedad[['timestamp', 'humidity']], 
             on='timestamp', 
             how='inner'
         )
-        
+        df_combinado = pd.merge(
+            df_combinado1, 
+            df_co2[['timestamp', 'co2']], 
+            on='timestamp', 
+            how='inner'  # O 'left', 'right', 'outer' según tu necesidad
+        )
+
         # Añadir características de tiempo
         df_combinado['hora_dia'] = df_combinado['timestamp'].dt.hour
         df_combinado['dia_semana'] = df_combinado['timestamp'].dt.dayofweek
+        df_combinado['semana'] = df_combinado['timestamp'].dt.isocalendar().week
+        return df_combinado
+
+
+
+    def combinar_datos(self, df1, p1, df2, p2, how='inner'):
+        """Combina dos DataFrames y añade características de tiempo."""
+
+        # Combinar DataFrames
+        df_combinado = pd.merge(
+            df1[['timestamp', p1]],
+            df2[['timestamp', p2]],
+            on='timestamp',
+            how=how  # Permite especificar el tipo de combinación
+        )
+
+        # Añadir características de tiempo
+        df_combinado['hora_dia'] = df_combinado['timestamp'].dt.hour
+        df_combinado['dia_semana'] = df_combinado['timestamp'].dt.dayofweek
+        df_combinado['semana'] = df_combinado['timestamp'].dt.isocalendar().week.astype(int)  # Asegura tipo int
         return df_combinado
