@@ -8,6 +8,8 @@ class LoadData:
     def __init__(self, url, token, org, bucket):
         self.client = InfluxDBClient(url=url, token=token, org=org)
         self.bucket = bucket
+        self.dias = 3
+        self.media = '30m'
     
     def crear_query(self, param, units,columnas):
         # Generar condiciones de filtro
@@ -16,18 +18,23 @@ class LoadData:
             for columna in columnas
         ])
         
+        condiciones = " or ".join([
+            f"r.entity_id == \"{columna + '_' + param}\""
+            for columna in columnas
+        ])        
         query = f'''
         import "strings"
 
         from(bucket: "{self.bucket}")
-        |> range(start: -30d)
+        |> range(start: -{self.dias}d)
         |> filter(fn: (r) => r["_measurement"] == "{units}")
         |> filter(fn: (r) => r["_field"] == "value")
         |> filter(fn: (r) => r["domain"] == "sensor")
         |> filter(fn: (r) => 
             {condiciones}
         )
-        |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)            
+        |> aggregateWindow(every: {self.media}, fn: mean, createEmpty: false)            
+        |> sort(columns: ["_time"], desc: false)
         |> pivot(
             rowKey: ["_time"],
             columnKey: ["entity_id"], 
@@ -49,6 +56,7 @@ class LoadData:
                 # Renombrar columna de tiempo
                 result = result.rename(columns={'_time': 'timestamp'})               
                 result['timestamp'] = pd.to_datetime(result['timestamp'])
+                result.drop(columns=['_start', '_stop','result','table','_measurement','_field','domain'], inplace=True)
                 return result
             else:
                 print("No se encontraron datos")
@@ -57,6 +65,8 @@ class LoadData:
         except Exception as e:
             print(f"Error al obtener datos de temperatura: {e}")
             return pd.DataFrame()
+
+
 
     def preparar_datos(self, result,parametro,sensores):
         columnas = [sensor + '_' + parametro  for sensor in sensores]
@@ -72,18 +82,19 @@ class LoadData:
         query = f'''
         import "strings"
         from(bucket: "{self.bucket}")
-        |> range(start: -30d)
+        |> range(start: -{self.dias}d)
         |> filter(fn: (r) => r["_measurement"] == "confort")
         |> filter(fn: (r) => r["_field"] == "confort")
         |> filter(fn: (r) => r["location"] == "casa")
-        |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)            
+        |> sort(columns: ["_time"], desc: false)
+        |> aggregateWindow(every: {self.media}, fn: mean, createEmpty: false)            
         |> pivot(
             rowKey: ["_time"],
             columnKey: ["_field"], 
             valueColumn: "_value"
         )
         '''        
-
+        print (query)
 
         try:
             result = self.client.query_api().query_data_frame(query)
