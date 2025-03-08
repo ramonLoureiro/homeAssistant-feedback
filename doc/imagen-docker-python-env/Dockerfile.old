@@ -1,0 +1,24 @@
+# Creamos imagen my-python-influxdb
+# Usa una imagen base oficial de Python
+FROM python:3.9
+
+# Establece el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copia los archivos del proyecto, incluidos el código y el archivo requirements.txt
+COPY . /app
+
+# Crea un entorno virtual dentro del contenedor
+RUN python -m venv /app/venv
+
+# Asegúrate de usar el entorno virtual y actualizar pip
+RUN /app/venv/bin/pip install --upgrade pip
+
+# Instala las dependencias de Python desde el archivo requirements.txt
+RUN /app/venv/bin/pip install influxdb-client requests numpy pandas scikit-learn python-dotenv flask matplotlib
+
+# Expone el puerto 5000
+EXPOSE 5000
+
+# Define el comando por defecto para ejecutar la aplicación Flask
+CMD ["/app/venv/bin/python", "web.py"]

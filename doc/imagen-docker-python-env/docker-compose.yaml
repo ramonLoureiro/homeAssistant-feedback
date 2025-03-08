@@ -1,0 +1,52 @@
+
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - influxdb
+
+  python:
+    image: my-python-flask:latest
+    container_name: python_influxdb_flask
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app  # Mapea la carpeta local al contenedor
+    working_dir: /app
+    command: tail -f /dev/null  # Mantiene el contenedor corriendo sin ejecutar nada
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUXDB_URL=${INFLUXDB_URL}
+      - INFLUXDB_TOKEN=${INFLUXDB_ADMIN_TOKEN}  
+      - INFLUXDB_ORG=${INFLUXDB_ORG}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
+
+volumes:
+  influxdb_data:
+  grafana_data:

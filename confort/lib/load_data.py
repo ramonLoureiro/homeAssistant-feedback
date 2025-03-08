@@ -9,7 +9,7 @@ class LoadData:
         self.client = InfluxDBClient(url=url, token=token, org=org)
         self.bucket = bucket
         self.dias = 3
-        self.media = '30m'
+        self.media = '15m'
     
     def crear_query(self, param, units,columnas):
         # Generar condiciones de filtro
