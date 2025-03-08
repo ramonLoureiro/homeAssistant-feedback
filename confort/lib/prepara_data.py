@@ -83,6 +83,7 @@ class PreparaData:
         prediccion['sensores'] = self.sensoresHTinterior + self.sensoresHTexterior + self.sensoresCO2
         prediccion['configuracion'] = self.url + ' ' + self.bucket
         print(prediccion)
+        self.prediccion = pd.DataFrame(prediccion)    
 
 
         return (prediccion)

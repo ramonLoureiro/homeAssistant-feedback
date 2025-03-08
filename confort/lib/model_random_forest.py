@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
+from datetime import datetime
 
 class PrediccionRandomForest:
     def __init__(self):
@@ -57,7 +58,8 @@ class PrediccionRandomForest:
 
         # Obtener la fecha y hora actual
         now = pd.Timestamp.now()
-        now_timestamp = int(now.value) // 10**9
+        now_timestamp = int(datetime.now().timestamp())
+       
         now_hour = now.hour
         now_day = now.weekday()
 
@@ -87,7 +89,7 @@ class PrediccionRandomForest:
         pred_hum = self.model_hum.predict(X_now_scaled)[0]
 
         return {
-            "timestamp": now_timestamp,
+            "timestamp":  datetime.now(),
             "temperature": round(pred_temp, 2),
             "humidity": round(pred_hum, 2)
         }

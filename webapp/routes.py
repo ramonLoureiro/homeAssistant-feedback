@@ -44,12 +44,14 @@ def get_dataFrame():
     data = preparador.prepara_datos ()
     df = preparador.dataFrame 
     html_table = df.to_html(classes='table table-bordered table-striped')
-    
+
     # Crear el gráfico de temperatura
-    fig_temp = px.line(df, x='timestamp', y='temperature', title='Temperatura a lo largo del tiempo', labels={'temperatura': 'Temperatura (°C)'})
-    
+    fig_temp = px.line(df, x='timestamp', y='temperature', title='Temperatura a lo largo del tiempo', labels={'temperatura': 'Temperatura (°C)'},line_shape='spline')
+    fig_temp.add_scatter(x=preparador.prediccion['timestamp'], y=preparador.prediccion['temperature'], mode='markers', name='Predicción', marker=dict(color='red', size=10))
+
     # Crear el gráfico de humedad
-    fig_hum = px.line(df, x='timestamp', y='humidity', title='Humedad a lo largo del tiempo', labels={'humedad': 'Humedad (%)'})
+    fig_hum = px.line(df, x='timestamp', y='humidity', title='Humedad a lo largo del tiempo', labels={'humedad': 'Humedad (%)'},line_shape='linear')
+    fig_hum.add_scatter(x=preparador.prediccion['timestamp'], y=preparador.prediccion['humidity'], mode='markers', name='Predicción', marker=dict(color='blue', size=10))
     
     # Convertir los gráficos a formato HTML para insertar en la plantilla
     graph_html_temp = fig_temp.to_html(full_html=False)
