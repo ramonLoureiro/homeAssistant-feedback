@@ -30,3 +30,20 @@ EXPOSE 5000
 
 # Establece el contenedor para ejecutar la aplicación web.py en el entorno virtual
 CMD ["/app/venv/bin/python", "web.py"]
+# Usa una imagen base oficial de Python
+FROM python:3.11-slim
+
+# Establece el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copia todos los archivos al contenedor
+COPY . .
+
+# Instala las dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expone el puerto 5000 para Flask
+EXPOSE 5000
+
+# Usa Gunicorn para servir la aplicación desde webapp
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "server.wsgi:app"]
