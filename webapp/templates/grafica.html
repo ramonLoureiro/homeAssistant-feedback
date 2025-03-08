@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div>
+        {{ graph_temp|safe }}
+    </div>
+
+    <!-- Gráfico de Humedad -->
+    <div>
+        {{ graph_hum|safe }}
+    </div>
+
+    <div>
+        <!-- Renderizar la tabla HTML generada por pandas -->
+        {{ table|safe }}
+    </div>
+
+{% endblock %}

@@ -1,4 +1,9 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, render_template_string
+
+import plotly.express as px
+import io
+import base64
+import os
 from dotenv import load_dotenv, dotenv_values # type: ignore
 from confort.lib.prepara_data import PreparaData # type: ignore
 
@@ -32,3 +37,29 @@ def get_data():
     data = preparador.prepara_datos ()
 #    return jsonify(ultimo_valor) 
     return data  # Devuelve JSON automáticamente
+
+@bp.route('/dataFrame')
+def get_dataFrame():
+    preparador = PreparaData(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET)
+    data = preparador.prepara_datos ()
+    df = preparador.dataFrame 
+    html_table = df.to_html(classes='table table-bordered table-striped')
+    
+    # Crear el gráfico de temperatura
+    fig_temp = px.line(df, x='timestamp', y='temperature', title='Temperatura a lo largo del tiempo', labels={'temperatura': 'Temperatura (°C)'})
+    
+    # Crear el gráfico de humedad
+    fig_hum = px.line(df, x='timestamp', y='humidity', title='Humedad a lo largo del tiempo', labels={'humedad': 'Humedad (%)'})
+    
+    # Convertir los gráficos a formato HTML para insertar en la plantilla
+    graph_html_temp = fig_temp.to_html(full_html=False)
+    graph_html_hum  = fig_hum.to_html(full_html=False)
+
+
+
+    fig = px.bar(df, x='temperature', y='humidity', title="temperatura vs humedad")
+
+    # Convertir el gráfico a formato HTML para incluirlo en la plantilla
+    graph_html = fig.to_html(full_html=False)
+    return render_template('grafica.html', table=html_table, graph_temp=graph_html_temp, graph_hum=graph_html_hum)
+

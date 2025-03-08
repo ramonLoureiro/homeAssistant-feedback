@@ -71,12 +71,12 @@ class PreparaData:
         ultimo_valor = df.sort_values(by="timestamp", ascending=False).iloc[0]
 
         df_final = df.dropna()
-        print(df_final)
+#        print(df_final)
 
 
         modelo = PrediccionRandomForest()
-        modelo.entrenar_modelo(df)
-
+        modelo.entrenar_modelo(df_final)
+        self.dataFrame = df_final
         # Hacer una predicción
         prediccion = modelo.predecir()
         prediccion['model'] = modelo.name

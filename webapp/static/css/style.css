@@ -1,0 +1,71 @@
+/* Estilos básicos para la estructura de la página */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+/* Contenedor principal */
+.container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Footer */
+footer {
+    background-color: #333;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    font-size: 14px;
+}
+
+footer p {
+    margin: 0;
+}
+
+/* Estilos del contenido */
+h1 {
+    color: #4CAF50;
+}
+ul {
+    list-style-type: none; /* Elimina las bolitas/puntos de la lista */
+    padding-left: 0;       /* Quita el sangrado izquierdo de la lista */
+}
+
+
+/* Enlaces en el footer */
+footer a {
+    color: #f4f4f4;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #4CAF50;
+}
+
+/* /static/css/style.css */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
