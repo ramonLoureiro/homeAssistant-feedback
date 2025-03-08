@@ -19,11 +19,11 @@ bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('indice.html')
 
 @bp.route('/about')
 def about():
-    return "Esta es la página 'About'."
+    return render_template('about.html')
 
 
 @bp.route('/data')
