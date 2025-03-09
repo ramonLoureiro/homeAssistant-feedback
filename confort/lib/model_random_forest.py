@@ -12,6 +12,8 @@ class PrediccionRandomForest:
         self.scaler = StandardScaler()
         self.entrenado = False
         self.df = None  # Atributo para almacenar el DataFrame de entrenamiento
+        self.df_filtrado = None  # Atributo para almacenar el DataFrame filtrado
+
 
     def entrenar_modelo(self, df):
         """Entrena el modelo con datos históricos filtrados y con variables adicionales."""
@@ -28,10 +30,14 @@ class PrediccionRandomForest:
         self.df['temp_diff_30m'] = self.df['temperature'].diff().fillna(0)
         self.df['hum_diff_30m'] = self.df['humidity'].diff().fillna(0)
 
+
+
         # Filtramos por la hora actual
         now = pd.Timestamp.now()
         now_hour = now.hour
         df_filtrado = self.df[self.df['hora_dia'] == now_hour]
+
+
 
         # Si no hay suficientes datos, usamos todos los datos
         if df_filtrado.shape[0] < 5:
@@ -48,8 +54,10 @@ class PrediccionRandomForest:
         # Entrenamos los modelos de predicción para temperatura y humedad
         self.model_temp.fit(X_scaled, y_temp)
         self.model_hum.fit(X_scaled, y_hum)
-
+        self.df_filtrado = df_filtrado  # Guardamos el DataFrame filtrado
         self.entrenado = True
+
+
 
     def predecir(self):
         """Realiza la predicción de temperatura y humedad utilizando las últimas tendencias."""

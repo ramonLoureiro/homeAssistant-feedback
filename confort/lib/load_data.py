@@ -3,14 +3,17 @@ import pandas as pd # type: ignore
 import numpy as np # type: ignore
 from influxdb_client import InfluxDBClient # type: ignore
 
-
+#
+# Clase para cargar los datos de InfluxDB
+#
 class LoadData:
     def __init__(self, url, token, org, bucket):
         self.client = InfluxDBClient(url=url, token=token, org=org)
         self.bucket = bucket
         self.dias = 3
         self.media = '15m'
-    
+
+
     def crear_query(self, param, units,columnas):
         # Generar condiciones de filtro
         condiciones = " or ".join([
@@ -43,6 +46,8 @@ class LoadData:
         '''        
         return query
 
+
+
     def obtener_datos(self, param, unit, sensores):
         query = self.crear_query(param,unit,sensores)
         try:
@@ -72,9 +77,7 @@ class LoadData:
         columnas = [sensor + '_' + parametro  for sensor in sensores]
         result[parametro] = result[columnas].mean(axis=1)
         # Añadir características de tiempo
-        result['hora_dia'] = result['timestamp'].dt.hour
-        result['dia_semana'] = result['timestamp'].dt.dayofweek
-        result['semana'] = result['timestamp'].dt.isocalendar().week
+        result = self.add_time_features(result)
         return result
 
 
@@ -134,10 +137,17 @@ class LoadData:
         )
 
         # Añadir características de tiempo
-        df_combinado['hora_dia'] = df_combinado['timestamp'].dt.hour
-        df_combinado['dia_semana'] = df_combinado['timestamp'].dt.dayofweek
-        df_combinado['semana'] = df_combinado['timestamp'].dt.isocalendar().week
+        df_combinado = self.add_time_features(df_combinado)
         return df_combinado
+
+
+    def add_time_features(self, df):
+        """Añade características de tiempo a un DataFrame."""
+        df['hora_dia'] = df['timestamp'].dt.hour
+        df['dia_semana'] = df['timestamp'].dt.dayofweek
+        df['semana'] = df['timestamp'].dt.isocalendar().week
+#        df['semana'] = df['timestamp'].dt.isocalendar().week.astype(int)  # Asegura tipo int
+        return df
 
 
 
@@ -152,8 +162,5 @@ class LoadData:
             how=how  # Permite especificar el tipo de combinación
         )
 
-        # Añadir características de tiempo
-        df_combinado['hora_dia'] = df_combinado['timestamp'].dt.hour
-        df_combinado['dia_semana'] = df_combinado['timestamp'].dt.dayofweek
-        df_combinado['semana'] = df_combinado['timestamp'].dt.isocalendar().week.astype(int)  # Asegura tipo int
+        df_combinado = self.add_time_features(df_combinado)
         return df_combinado

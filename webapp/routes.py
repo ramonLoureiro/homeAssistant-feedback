@@ -33,35 +33,33 @@ def about():
 
 @bp.route('/data')
 def get_data():
-    preparador = PreparaData(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET)
-    data = preparador.prepara_datos ()
+    entrenador = PreparaData(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET)
+    data = entrenador.prepara_datos ()
 #    return jsonify(ultimo_valor) 
     return data  # Devuelve JSON automáticamente
 
+# Ruta para obtener los datos en formato DataFrame
 @bp.route('/dataFrame')
 def get_dataFrame():
-    preparador = PreparaData(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET)
-    data = preparador.prepara_datos ()
-    df = preparador.dataFrame 
+    entrenador = PreparaData(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET)
+    data = entrenador.prepara_datos ()
+    df = entrenador.dataFrame
     html_table = df.to_html(classes='table table-bordered table-striped')
 
     # Crear el gráfico de temperatura
-    fig_temp = px.line(df, x='timestamp', y='temperature', title='Temperatura a lo largo del tiempo', labels={'temperatura': 'Temperatura (°C)'},line_shape='spline')
-    fig_temp.add_scatter(x=preparador.prediccion['timestamp'], y=preparador.prediccion['temperature'], mode='markers', name='Predicción', marker=dict(color='red', size=10))
+    fig_temperatura = px.line(df, x='timestamp', y='temperature', title='Temperatura a lo largo del tiempo', labels={'temperatura': 'Temperatura (°C)'},line_shape='linear')
+    fig_temperatura.add_scatter(x=entrenador.prediccion['timestamp'], y=entrenador.prediccion['temperature'], mode='markers', name='Predicción', marker=dict(color='red', size=10))
 
     # Crear el gráfico de humedad
-    fig_hum = px.line(df, x='timestamp', y='humidity', title='Humedad a lo largo del tiempo', labels={'humedad': 'Humedad (%)'},line_shape='linear')
-    fig_hum.add_scatter(x=preparador.prediccion['timestamp'], y=preparador.prediccion['humidity'], mode='markers', name='Predicción', marker=dict(color='blue', size=10))
+    fig_humedad = px.line(df, x='timestamp', y='humidity', title='Humedad a lo largo del tiempo', labels={'humedad': 'Humedad (%)'},line_shape='linear')
+    fig_humedad.add_scatter(x=entrenador.prediccion['timestamp'], y=entrenador.prediccion['humidity'], mode='markers', name='Predicción', marker=dict(color='blue', size=10))
     
     # Convertir los gráficos a formato HTML para insertar en la plantilla
-    graph_html_temp = fig_temp.to_html(full_html=False)
-    graph_html_hum  = fig_hum.to_html(full_html=False)
+    graph_html_temperatura = fig_temperatura.to_html(full_html=False)
+    graph_html_humedad  = fig_humedad.to_html(full_html=True)
 
-
-
-    fig = px.bar(df, x='temperature', y='humidity', title="temperatura vs humedad")
-
-    # Convertir el gráfico a formato HTML para incluirlo en la plantilla
-    graph_html = fig.to_html(full_html=False)
-    return render_template('grafica.html', table=html_table, graph_temp=graph_html_temp, graph_hum=graph_html_hum)
+    return render_template('grafica.html', 
+        table=html_table, 
+        graph_temperatura=graph_html_temperatura, 
+        graph_humedad=graph_html_humedad)
 

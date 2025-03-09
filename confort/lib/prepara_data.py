@@ -5,6 +5,7 @@ import pandas as pd # type: ignore
 import numpy as np # type: ignore
 from dotenv import load_dotenv, dotenv_values # type: ignore
 from confort.lib.load_data import LoadData # type: ignore
+from confort.lib.save_prediction_data import SaveData # type: ignore
 from confort.lib.model_random_forest import PrediccionRandomForest # type: ignore
 from influxdb_client import InfluxDBClient # type: ignore
 
@@ -16,6 +17,9 @@ class PreparaData:
         self.org = org
         self.url = url  
         self.token = token
+        self.dataFrame = None
+        self.prediccion = None
+        self.df_filtrado = None
 
         self.sensoresHTinterior = [
             'tuya_termometro_wifi',
@@ -76,14 +80,18 @@ class PreparaData:
 
         modelo = PrediccionRandomForest()
         modelo.entrenar_modelo(df_final)
+        self.df_filtrado = modelo.df_filtrado
         self.dataFrame = df_final
         # Hacer una predicción
         prediccion = modelo.predecir()
         prediccion['model'] = modelo.name
         prediccion['sensores'] = self.sensoresHTinterior + self.sensoresHTexterior + self.sensoresCO2
-        prediccion['configuracion'] = self.url + ' ' + self.bucket
+        prediccion['configuracion'] = self.url + ' bucket::' + self.bucket
         print(prediccion)
         self.prediccion = pd.DataFrame(prediccion)    
+        saver = SaveData(self.url, self.token, self.org, self.bucket)
+        saver.saveValue (prediccion['temperature'],prediccion['humidity'])
+        prediccion['saved'] = True
 
 
         return (prediccion)
