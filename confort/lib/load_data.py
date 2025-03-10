@@ -11,7 +11,7 @@ class LoadData:
         self.client = InfluxDBClient(url=url, token=token, org=org)
         self.bucket = bucket
         self.dias = 7
-        self.media = '15m'
+        self.media = '15'
 
 
     def crear_query(self, param, units,columnas):
@@ -36,7 +36,7 @@ class LoadData:
         |> filter(fn: (r) => 
             {condiciones}
         )
-        |> aggregateWindow(every: {self.media}, fn: mean, createEmpty: false)            
+        |> aggregateWindow(every: {self.media}m, fn: mean, createEmpty: false)            
         |> sort(columns: ["_time"], desc: false)
         |> pivot(
             rowKey: ["_time"],
@@ -90,7 +90,7 @@ class LoadData:
         |> filter(fn: (r) => r["_field"] == "confort")
         |> filter(fn: (r) => r["location"] == "casa")
         |> sort(columns: ["_time"], desc: false)
-        |> aggregateWindow(every: {self.media}, fn: mean, createEmpty: false)            
+        |> aggregateWindow(every: {self.media}m, fn: mean, createEmpty: false)            
         |> pivot(
             rowKey: ["_time"],
             columnKey: ["_field"], 
@@ -116,7 +116,7 @@ class LoadData:
                 return pd.DataFrame()
         
         except Exception as e:
-            print(f"Error al obtener datos de temperatura: {e}")
+            print(f"Error al obtener datos: {e}")
             return pd.DataFrame()
 
 
