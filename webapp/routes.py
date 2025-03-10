@@ -44,15 +44,40 @@ def get_dataFrame():
     entrenador = PreparaData(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET)
     data = entrenador.prepara_datos ()
     df = entrenador.dataFrame
-    html_table = df.to_html(classes='table table-bordered table-striped')
+    df['temperature_smooth'] = df['temperature'].rolling(window=20, center=True).mean()
+    df['humidity_smooth'] = df['humidity'].rolling(window=20, center=True).mean()
+
+    html_table = df.tail(20).to_html(classes='table table-bordered table-striped')
 
     # Crear el gráfico de temperatura
-    fig_temperatura = px.line(df, x='timestamp', y='temperature', title='Temperatura a lo largo del tiempo', labels={'temperatura': 'Temperatura (°C)'},line_shape='linear')
-    fig_temperatura.add_scatter(x=entrenador.prediccion['timestamp'], y=entrenador.prediccion['temperature'], mode='markers', name='Predicción', marker=dict(color='red', size=10))
+    fig_temperatura = px.line(
+        df, 
+        x='timestamp', 
+        y='temperature_smooth', 
+        title='Temperatura a lo largo del tiempo', 
+        labels={'temperatura': 'Temperatura (°C)'},
+        line_shape='linear')
+    fig_temperatura.add_scatter(
+        x=entrenador.prediccion['timestamp'], 
+        y=entrenador.prediccion['temperature'], 
+        mode='markers', 
+        name='Predicción', 
+        marker=dict(color='red', size=10))
 
     # Crear el gráfico de humedad
-    fig_humedad = px.line(df, x='timestamp', y='humidity', title='Humedad a lo largo del tiempo', labels={'humedad': 'Humedad (%)'},line_shape='linear')
-    fig_humedad.add_scatter(x=entrenador.prediccion['timestamp'], y=entrenador.prediccion['humidity'], mode='markers', name='Predicción', marker=dict(color='blue', size=10))
+    fig_humedad = px.line(
+        df, 
+        x='timestamp', 
+        y='humidity_smooth', 
+        title='Humedad a lo largo del tiempo', 
+        labels={'humedad': 'Humedad (%)'},
+        line_shape='linear')
+    fig_humedad.add_scatter(
+        x=entrenador.prediccion['timestamp'], 
+        y=entrenador.prediccion['humidity'], 
+        mode='markers', 
+        name='Predicción', 
+        marker=dict(color='blue', size=10))
     
     # Convertir los gráficos a formato HTML para insertar en la plantilla
     graph_html_temperatura = fig_temperatura.to_html(full_html=False)

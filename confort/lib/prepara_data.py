@@ -88,10 +88,10 @@ class PreparaData:
         prediccion['sensores'] = self.sensoresHTinterior + self.sensoresHTexterior + self.sensoresCO2
         prediccion['configuracion'] = self.url + ' bucket::' + self.bucket
         print(prediccion)
-        self.prediccion = pd.DataFrame(prediccion)    
         saver = SaveData(self.url, self.token, self.org, self.bucket)
         saver.saveValue (prediccion['temperature'],prediccion['humidity'])
         prediccion['saved'] = True
+        self.prediccion = pd.DataFrame(prediccion)    
 
 
         return (prediccion)

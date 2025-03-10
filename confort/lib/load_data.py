@@ -10,7 +10,7 @@ class LoadData:
     def __init__(self, url, token, org, bucket):
         self.client = InfluxDBClient(url=url, token=token, org=org)
         self.bucket = bucket
-        self.dias = 3
+        self.dias = 7
         self.media = '15m'
 
 
