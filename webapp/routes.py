@@ -6,6 +6,7 @@ import base64
 import os
 from dotenv import load_dotenv, dotenv_values # type: ignore
 from confort.lib.prepara_data import PreparaData # type: ignore
+from confort.lib.smooth_data import SmoothData # type: ignore
 
 # Cargar variables desde .env
 load_dotenv(override=True)
@@ -35,7 +36,6 @@ def about():
 def get_data():
     entrenador = PreparaData(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET)
     data = entrenador.prepara_datos ()
-#    return jsonify(ultimo_valor) 
     return data  # Devuelve JSON automáticamente
 
 # Ruta para obtener los datos en formato DataFrame
@@ -44,8 +44,10 @@ def get_dataFrame():
     entrenador = PreparaData(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET)
     data = entrenador.prepara_datos ()
     df = entrenador.dataFrame
-    df['temperature_smooth'] = df['temperature'].rolling(window=20, center=True).mean()
-    df['humidity_smooth'] = df['humidity'].rolling(window=20, center=True).mean()
+
+    smoother = SmoothData(df)
+    smoother.execute('temperature_smooth','temperature')
+    smoother.execute('humidity_smooth','humidity')
 
     html_table = df.tail(20).to_html(classes='table table-bordered table-striped')
 
